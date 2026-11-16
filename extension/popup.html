@@ -1,0 +1,32 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+  body{font:13px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;width:280px;color:#101619;background:#F1F4F5}
+  header{background:#0E6B84;color:#fff;padding:10px 12px;font-weight:600}
+  .row{display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #D4DEE1;background:#fff}
+  .row b{font-family:ui-monospace,Menlo,monospace}
+  .note{padding:8px 12px;color:#4A5A61;font-size:12px}
+  a.btn{display:block;margin:10px 12px;text-align:center;background:#0E6B84;color:#fff;padding:8px;border-radius:3px;text-decoration:none;font-weight:600}
+</style></head><body>
+<header>OITE Tracker</header>
+<div class="row"><span>Answered today (all devices)</span><b id="today">—</b></div>
+<div class="row"><span>Left today</span><b id="left">—</b></div>
+<div class="note" id="blocks" style="background:#fff;border-bottom:1px solid #D4DEE1" hidden></div>
+<div class="row"><span>Correct today</span><b id="pct">—</b></div>
+<div class="row"><span>Logged all-time (all devices)</span><b id="all">—</b></div>
+<div class="row"><span>Current quiz topic</span><b id="cur">—</b></div>
+<div class="row"><span>Last synced with plan</span><b id="sync">—</b></div>
+<label class="row" style="cursor:pointer"><span>Background sync<br><small style="color:#7C8C93">opens the plan in a pinned background tab for ~1 min to send and fetch results across your devices</small></span><input type="checkbox" id="bg"></label>
+<a class="btn" href="https://claude.ai/artifact/P4N2XEaN54snPt57P11Zpo" target="_blank">Open Block Plan</a>
+<header style="margin-top:6px">Orthobullets</header>
+<div class="row"><span>Answered today</span><b id="obToday">—</b></div>
+<div class="row"><span>Correct today</span><b id="obPct">—</b></div>
+<div class="row"><span>Logged all-time / missed</span><b id="obAll">—</b></div>
+<div style="display:flex;gap:8px;margin:10px 12px">
+  <a class="btn" id="obAnki" href="#" style="flex:1;margin:0">Missed → Anki</a>
+  <a class="btn" id="obJson" href="#" style="flex:1;margin:0;background:#4A5A61">Full log (JSON)</a>
+</div>
+<div class="note">Orthobullets questions (with figures) are sent to the Block Plan, in their own Orthobullets panel.</div>
+
+<div class="note">Counts include your other devices as of the last sync. Opening this popup starts one.</div>
+<script src="popup.js"></script>
+</body></html>

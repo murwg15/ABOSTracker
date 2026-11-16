@@ -1,0 +1,100 @@
+{
+  "manifest_version": 3,
+  "name": "OITE Tracker",
+  "version": "1.9.3",
+  "description": "Logs your ResStudy and Orthobullets questions into the OITE Block Plan, builds each block's test, and adds a ResStudy dark mode.",
+  "permissions": [
+    "storage",
+    "alarms",
+    "unlimitedStorage"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "OITE Tracker"
+  },
+  "icons": {
+    "128": "icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://learn.aaos.org/diweb/*"
+      ],
+      "js": [
+        "hook.js"
+      ],
+      "world": "MAIN",
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://learn.aaos.org/diweb/*"
+      ],
+      "js": [
+        "common.js",
+        "resstudy.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://b2a13d5d-3942-4a33-84af-cefad6847d94.frame.claudeusercontent.com/*"
+      ],
+      "js": [
+        "bridge.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_origin_as_fallback": true
+    },
+    {
+      "matches": [
+        "https://www.orthobullets.com/*"
+      ],
+      "js": [
+        "orthobullets.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://learn.aaos.org/diweb/*"
+      ],
+      "js": [
+        "build-main.js"
+      ],
+      "world": "MAIN",
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://learn.aaos.org/diweb/*",
+        "https://www.orthobullets.com/qbank/*"
+      ],
+      "js": [
+        "build.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://learn.aaos.org/diweb/*"
+      ],
+      "css": [
+        "dark.css"
+      ],
+      "js": [
+        "dark.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "https://upload.orthobullets.com/*"
+  ]
+}
