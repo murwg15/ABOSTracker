@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OITE Tracker",
-  "version": "1.9.5",
+  "version": "1.9.6",
   "description": "Logs your ResStudy and Orthobullets questions into the OITE Block Plan, builds each block's test, and adds a ResStudy dark mode.",
   "permissions": [
     "storage",

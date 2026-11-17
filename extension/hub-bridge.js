@@ -1,5 +1,6 @@
 // Runs only inside Will's Home Base page (a claude.ai artifact frame).
-// Read-only: hands the page a compact study summary, today's plan and Chrome's most-visited sites. Accepts no writes.
+// Hands the page a compact study summary, today's plan and Chrome's most-visited sites.
+// The only thing it accepts back: "build today's block number N", using the recipe the Block Plan itself synced (never one from the page).
 (function () {
   if (window.__homeBaseBridge) return;
   window.__homeBaseBridge = true;
@@ -28,7 +29,9 @@
       Object.keys(q.qs || {}).forEach(function (k) { var r = q.qs[k]; if (r && r.a && (r.d || q.date || "") === t) local++; });
     });
     return { date: t, left: Math.max(0, (td.left || 0) - Math.max(0, local - remToday)), plannedLeft: td.left || 0,
-      blocks: (td.blocks || []).map(function (b) { return { name: String(b.name || ""), left: b.left }; }), syncedAt: rem.at || null };
+      blocks: (td.blocks || []).map(function (b) { var sp = b.spec || null;
+        return { name: String(b.name || ""), full: String(b.full || b.name || ""), recipe: String(b.recipe || ""), n: b.n, left: b.left,
+          src: sp ? sp.src : null, buildable: !!(sp && (sp.src === "orthobullets" || (sp.src === "resstudy" && !sp.bank))) }; }), syncedAt: rem.at || null };
   }
   function send() {
     Promise.all([
@@ -40,9 +43,26 @@
         quizzes: summary(st), banks: (st.dashboard && st.dashboard.banks) || null, topSites: r[1] || [], plan: plan(st) }, "*");
     }).catch(function () {});
   }
+  function reply(reqId, status, msg) { window.postMessage({ homeBase: "build", reqId: reqId, status: status, msg: msg || "" }, "*"); }
   window.addEventListener("message", function (e) {
-    if (e.source !== window || !e.data || e.data.homeBase !== "hello") return;
-    ready = true; send();
+    if (e.source !== window || !e.data) return;
+    var m = e.data;
+    if (m.homeBase === "hello") { ready = true; send(); return; }
+    if (m.homeBase === "build" && m.reqId && typeof m.idx === "number") {
+      var reqId = String(m.reqId).slice(0, 40);
+      chrome.storage.local.get("remote").then(function (st) {
+        var td = (st.remote || {}).today, b = td && td.date === day() && (td.blocks || [])[m.idx];
+        if (!b || !b.spec) { reply(reqId, "error", "That block isn't in today's synced plan. Open the tracker once, then try again."); return; }
+        return chrome.runtime.sendMessage({ type: "build", reqId: reqId, spec: b.spec }).then(function (r) {
+          if (!r || !r.ok) reply(reqId, "error", (r && r.error) || "The extension couldn't open the test builder.");
+          else reply(reqId, "opened", "");
+        });
+      }).catch(function () { reply(reqId, "error", "The extension couldn't open the test builder. Reload this page and try again."); });
+    }
+  });
+  chrome.runtime.onMessage.addListener(function (msg) {
+    if (!msg || msg.type !== "buildStatus" || !msg.reqId) return;
+    reply(msg.reqId, msg.status, msg.msg || "");
   });
   chrome.storage.onChanged.addListener(function (ch, area) {
     if (!ready || area !== "local") return;
