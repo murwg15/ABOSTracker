@@ -1,3 +1,4 @@
+try { document.getElementById("ver").textContent = "v" + chrome.runtime.getManifest().version; } catch (e) {}
 var NAMES = {sn:"Spine",ar:"Hip & Knee",tr:"Trauma",tu:"Tumors",pe:"Peds",bs:"Basic Sci",hw:"Hand",fa:"Foot & Ankle",
   se:"Shoulder & Elbow",sm:"Sports",ai:"Anat Imaging",mi:"Misc",ix:"Incorrect redo",rn:"Random",multi:"Mixed",
   s20:"OITE 2020",s21:"OITE 2021",s22:"OITE 2022",s23:"OITE 2023",s24:"OITE 2024",s25:"OITE 2025",ok13:"OKU 13",ok14:"OKU 14"};
