@@ -179,3 +179,12 @@ chrome.tabs.onRemoved.addListener(function (tabId) {
     delete jobs[tabId]; return setJobs(jobs);
   });
 });
+
+// Home Base page: Chrome's most-visited sites (titles + URLs only), for its quick links.
+chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
+  if (!msg || msg.type !== "topSites" || sender.id !== chrome.runtime.id) return;
+  chrome.topSites.get().then(function (list) {
+    sendResponse((list || []).slice(0, 12).map(function (x) { return { title: x.title, url: x.url }; }));
+  }, function () { sendResponse([]); });
+  return true;
+});
