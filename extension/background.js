@@ -9,8 +9,25 @@ function scheduleNightly() {
   if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
   chrome.alarms.create("nightly", { when: d.getTime(), periodInMinutes: 1440 });
 }
-chrome.runtime.onInstalled.addListener(scheduleNightly);
-chrome.runtime.onStartup.addListener(scheduleNightly);
+// Morning: if today's plan hasn't synced yet (the 8:50 pm sync only knows yesterday), pull it at 4:45 am,
+// or as soon as Chrome wakes or starts after that, so Home Base shows today's blocks without opening the plan.
+function localDay() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function scheduleMorning() {
+  var d = new Date(); d.setHours(4, 45, 0, 0);
+  if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
+  chrome.alarms.create("morning", { when: d.getTime(), periodInMinutes: 1440 });
+}
+function pullIfStale(minGapMin) {
+  return chrome.storage.local.get(["remote", "bgSync", "syncTabId", "lastPull"]).then(function (st) {
+    var td = (st.remote || {}).today;
+    if (td && td.date === localDay()) return;
+    if (st.bgSync === false || st.syncTabId) return;
+    if (Date.now() - (st.lastPull || 0) < (minGapMin || 15) * 60000) return;
+    return openSyncTab();
+  });
+}
+chrome.runtime.onInstalled.addListener(function () { scheduleNightly(); scheduleMorning(); });
+chrome.runtime.onStartup.addListener(function () { scheduleNightly(); scheduleMorning(); chrome.alarms.create("startPull", { delayInMinutes: 1 }); });
 
 chrome.storage.onChanged.addListener(function (ch, area) {
   if (area !== "local") return;
@@ -35,6 +52,7 @@ function openSyncTab() {
 }
 // "pull": fetch what other devices logged, even when this device has nothing new to send.
 chrome.runtime.onMessage.addListener(function (msg) {
+  if (msg && msg.type === "pullIfStale") { pullIfStale(msg.minGapMin || 15); return; }
   if (!msg || msg.type !== "pull") return;
   chrome.storage.local.get(["bgSync", "syncTabId", "lastPull", "lastSync"]).then(function (st) {
     if (st.bgSync === false || st.syncTabId) return;
@@ -75,6 +93,7 @@ chrome.alarms.onAlarm.addListener(function (a) {
       openSyncTab();
     });
   }
+  if (a.name === "morning" || a.name === "startPull") pullIfStale(a.name === "morning" ? 1 : 15);
   if (a.name === "syncClose") {
     chrome.storage.local.get("syncTabId").then(function (st) {
       if (st.syncTabId) chrome.tabs.remove(st.syncTabId).catch(function () {});
