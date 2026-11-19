@@ -1,5 +1,6 @@
 // Runs only inside Will's Home Base page (a claude.ai artifact frame).
 // Hands the page a compact study summary, today's plan and Chrome's most-visited sites.
+// If today's plan hasn't synced yet, asks the background to pull it (1.9.7), so the page never needs the plan opened by hand.
 // The only thing it accepts back: "build today's block number N", using the recipe the Block Plan itself synced (never one from the page).
 (function () {
   if (window.__homeBaseBridge) return;
@@ -38,9 +39,11 @@
       chrome.storage.local.get(null),
       chrome.runtime.sendMessage({ type: "topSites" }).catch(function () { return []; }),
     ]).then(function (r) {
-      var st = r[0] || {};
+      var st = r[0] || {}, pl = plan(st);
+      // Today's plan not synced yet: have the extension open the Block Plan in a background tab for a moment (at most every 15 min).
+      if (pl.stale) { try { chrome.runtime.sendMessage({ type: "pullIfStale", minGapMin: 15 }).catch(function () {}); } catch (e) {} }
       window.postMessage({ homeBase: "data", version: chrome.runtime.getManifest().version,
-        quizzes: summary(st), banks: (st.dashboard && st.dashboard.banks) || null, topSites: r[1] || [], plan: plan(st) }, "*");
+        quizzes: summary(st), banks: (st.dashboard && st.dashboard.banks) || null, topSites: r[1] || [], plan: pl }, "*");
     }).catch(function () {});
   }
   function reply(reqId, status, msg) { window.postMessage({ homeBase: "build", reqId: reqId, status: status, msg: msg || "" }, "*"); }
